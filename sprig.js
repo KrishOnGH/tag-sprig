@@ -145,22 +145,36 @@ const levels = [
 ..............
 ..............`
 ]
+setMap(levels[level])
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getSprite(x, y) {
+  if (getTile(x, y).length == 0) {
+    return '.'
+  }
+  return getTile(x, y)[0]['_type']
+}
+
+for (let x = 0; x <= 14; x++) {
+  for (let y = 0; y <= 10; y++) {
+    console.log(getSprite(x, y))
+  }
 }
 
 let it = 1
 let playerOne = playerOneIdle
 let playerTwo = playerTwoIdle
 
-setMap(levels[level])
-
 onInput("w", () => {
   if (it == 1) {
-    getFirst(tagged).y -= 2
+    getFirst(tagged).y -= 1
   }
-  getFirst(playerOne).y -= 2
+  if (getFirst(playerOne).y > 2 || it != 1) {
+    getFirst(playerOne).y -= 1
+  }
 })
 
 onInput("a", () => {
@@ -193,7 +207,9 @@ onInput("i", () => {
   if (it == 2) {
     getFirst(tagged).y -= 1
   }
-  getFirst(playerTwo).y -= 1
+  if (getFirst(playerTwo).y > 2 || it != 2) {
+    getFirst(playerTwo).y -= 1
+  }
 })
 
 onInput("j", () => {
@@ -229,7 +245,6 @@ afterInput(async () => {
   playerOne = playerOneIdle
   clearTile(x, y)
   addSprite(x, y, ':')
-
   
   x = getFirst(playerTwo).x
   y = getFirst(playerTwo).y
@@ -237,38 +252,23 @@ afterInput(async () => {
   clearTile(x, y)
   addSprite(x, y, '*')
   
-  const applyGravityWithDelay = (sprite) => {
-    const fallDelay = 400;
-    let isSolidBelow = false;
+  async function applyGravityWithDelay(sprite) {
+    let x = getFirst(sprite).x
+    let y = getFirst(sprite).y
 
-    const fallInterval = setInterval(() => {
-      const tileBelow = getTile(sprite.x, sprite.y + 1);
-      const hasSolidBelow = tileBelow.some(s => s.type === wall);
-
-      if (!hasSolidBelow && !isSolidBelow) {
-        sprite.y += 1;
+    for (let i = y; i <= 10; i++) {
+      if (i < 10 && getSprite(x, i+1) == '.') {
+        getFirst(sprite).y += 1
+        await delay(100)
       } else {
-        isSolidBelow = true;
-        setTimeout(() => {
-          isSolidBelow = getTile(sprite.x, sprite.y + 1).some(s => s.type === wall);
-          if (isSolidBelow) {
-            sprite.y += 1;
-          }
-          if (isSolidBelow) {
-            clearInterval(fallInterval);
-          }
-        }, fallDelay);
+        break
       }
-
-      if (isSolidBelow) {
-        clearInterval(fallInterval);
-      }
-    }, fallDelay);
+    }
   }
   
-  applyGravityWithDelay(getFirst(playerOne));
+  await applyGravityWithDelay(playerOne);
 
-  applyGravityWithDelay(getFirst(playerTwo));
+  await applyGravityWithDelay(playerTwo);
 
-  applyGravityWithDelay(getFirst(tagged));
+  await applyGravityWithDelay(tagged);
 })
