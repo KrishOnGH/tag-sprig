@@ -138,7 +138,7 @@ const levels = [
 ..............
 ..............
 ..............
-...!......!...
+...!..........
 ...:......*...
 ..............
 ..............
@@ -146,40 +146,129 @@ const levels = [
 ..............`
 ]
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+let it = 1
+let playerOne = playerOneIdle
+let playerTwo = playerTwoIdle
+
 setMap(levels[level])
 
 onInput("w", () => {
-  getFirst(playerOneIdle).y -= 1
+  if (it == 1) {
+    getFirst(tagged).y -= 2
+  }
+  getFirst(playerOne).y -= 2
 })
 
 onInput("a", () => {
-  getFirst(playerOneIdle).x -= 1
-})
-
-onInput("s", () => {
-  getFirst(playerOneIdle).y += 1
+  let x = getFirst(playerOne).x
+  let y = getFirst(playerOne).y
+  playerOne = playerOneRunningLeft
+  clearTile(x, y)
+  addSprite(x, y, '<')
+  
+  if (it == 1) {
+    getFirst(tagged).x -= 1
+  }
+  getFirst(playerOne).x -= 1
 })
 
 onInput("d", () => {
-  getFirst(playerOneIdle).x += 1
+  let x = getFirst(playerOne).x
+  let y = getFirst(playerOne).y
+  playerOne = playerOneRunningRight
+  clearTile(x, y)
+  addSprite(x, y, '>')
+  
+  if (it == 1) {
+    getFirst(tagged).x += 1
+  }
+  getFirst(playerOne).x += 1
 })
 
 onInput("i", () => {
-  getFirst(playerTwoIdle).y -= 1
+  if (it == 2) {
+    getFirst(tagged).y -= 1
+  }
+  getFirst(playerTwo).y -= 1
 })
 
 onInput("j", () => {
-  getFirst(playerTwoIdle).x -= 1
-})
-
-onInput("k", () => {
-  getFirst(playerTwoIdle).y += 1
+  let x = getFirst(playerTwo).x
+  let y = getFirst(playerTwo).y
+  playerTwo = playerTwoRunningLeft
+  clearTile(x, y)
+  addSprite(x, y, ')')
+  
+  if (it == 2) {
+    getFirst(tagged).x -= 1
+  }
+  getFirst(playerTwo).x -= 1
 })
 
 onInput("l", () => {
-  getFirst(playerTwoIdle).x += 1
+  let x = getFirst(playerTwo).x
+  let y = getFirst(playerTwo).y
+  playerTwo = playerTwoRunningRight
+  clearTile(x, y)
+  addSprite(x, y, '(')
+  
+  if (it == 2) {
+    getFirst(tagged).x += 1
+  }
+  getFirst(playerTwo).x += 1
 })
 
-afterInput(() => {
+afterInput(async () => {
+  await delay(400);
+  let x = getFirst(playerOne).x
+  let y = getFirst(playerOne).y
+  playerOne = playerOneIdle
+  clearTile(x, y)
+  addSprite(x, y, ':')
+
   
+  x = getFirst(playerTwo).x
+  y = getFirst(playerTwo).y
+  playerTwo = playerTwoIdle
+  clearTile(x, y)
+  addSprite(x, y, '*')
+  
+  const applyGravityWithDelay = (sprite) => {
+    const fallDelay = 400;
+    let isSolidBelow = false;
+
+    const fallInterval = setInterval(() => {
+      const tileBelow = getTile(sprite.x, sprite.y + 1);
+      const hasSolidBelow = tileBelow.some(s => s.type === wall);
+
+      if (!hasSolidBelow && !isSolidBelow) {
+        sprite.y += 1;
+      } else {
+        isSolidBelow = true;
+        setTimeout(() => {
+          isSolidBelow = getTile(sprite.x, sprite.y + 1).some(s => s.type === wall);
+          if (isSolidBelow) {
+            sprite.y += 1;
+          }
+          if (isSolidBelow) {
+            clearInterval(fallInterval);
+          }
+        }, fallDelay);
+      }
+
+      if (isSolidBelow) {
+        clearInterval(fallInterval);
+      }
+    }, fallDelay);
+  }
+  
+  applyGravityWithDelay(getFirst(playerOne));
+
+  applyGravityWithDelay(getFirst(playerTwo));
+
+  applyGravityWithDelay(getFirst(tagged));
 })
