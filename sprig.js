@@ -11,6 +11,8 @@ const taggedPlayerTwoRunningRight = "R"
 const taggedPlayerTwoRunningLeft = "L"
 const taggedPlayerTwoIdle = "J"
 
+const grass = "1"
+
 setLegend(
   [ playerOneRunningRight, bitmap`
 ................
@@ -215,24 +217,39 @@ setLegend(
 .....9.....9....
 .....9..9..9....
 .....9.9.9.9....
-.....99..99.....` ]
+.....99..99.....` ],
+  [ grass, bitmap`
+................
+................
+................
+4.44.4..44444..4
+4DC4DC4D44D4D44D
+DCDCDDD4DCDDDDD4
+DCCDCCDCDDCDCCDD
+CCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCC
+................
+................
+................` ],
 )
-
-setSolids([])
 
 let level = 0
 const levels = [
   map`
 ..............
+.1...1.111....
 ..............
-..............
-..............
-..............
-..............
+..111.........
+......111.....
+.11.......111.
 ...:......*...
+1111.11.....11
 ..............
-..............
-..............
+....1...11111.
 ..............`
 ]
 setMap(levels[level])
@@ -258,14 +275,26 @@ function tag(player) {
     playerOne = taggedPlayerOneIdle
     clearTile(x, y)
     addSprite(x, y, 'j')
+
+    x = getFirst(playerTwo).x
+    y = getFirst(playerTwo).y
+    playerTwo = playerTwoIdle
+    clearTile(x, y)
+    addSprite(x, y, '*')
   } else if (player == 2) {
     let x = getFirst(playerTwo).x
     let y = getFirst(playerTwo).y
     playerTwo = taggedPlayerTwoIdle
     clearTile(x, y)
     addSprite(x, y, 'J')
+
+    x = getFirst(playerOne).x
+    y = getFirst(playerOne).y
+    playerOne = playerOneIdle
+    clearTile(x, y)
+    addSprite(x, y, ':')
   }
-  tag = player
+  it = player
 }
 
 let it = 0
@@ -279,13 +308,15 @@ onInput("w", () => {
   console.log(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2))
   if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == '.' && !(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+1) == '.' && getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2) == '.')) {
     getFirst(playerOne).y -= 1
+  } else if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == playerTwo) {
+    tag(2)
   }
 })
 
 onInput("a", () => {
   let x = getFirst(playerOne).x
   let y = getFirst(playerOne).y
-  if (tag != 1) {
+  if (it != 1) {
     playerOne = playerOneRunningLeft
     clearTile(x, y)
     addSprite(x, y, '<')
@@ -297,13 +328,15 @@ onInput("a", () => {
 
   if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == '.') {
     getFirst(playerOne).x -= 1
+  } else if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == playerTwo) {
+    tag(2)
   }
 })
 
 onInput("d", () => {
   let x = getFirst(playerOne).x
   let y = getFirst(playerOne).y
-  if (tag != 1) {
+  if (it != 1) {
     playerOne = playerOneRunningRight
     clearTile(x, y)
     addSprite(x, y, '>')
@@ -315,19 +348,23 @@ onInput("d", () => {
 
   if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == '.') {
     getFirst(playerOne).x += 1
+  } else if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == playerTwo) {
+    tag(2)
   }
 })
 
 onInput("i", () => {
   if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y-1) == '.' && !(getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == '.' && getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+2) == '.')) {
     getFirst(playerTwo).y -= 1
+  } else if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == playerOne) {
+    tag(1)
   }
 })
 
 onInput("j", () => {
   let x = getFirst(playerTwo).x
   let y = getFirst(playerTwo).y
-  if (tag == 1) {
+  if (it == 1) {
     playerTwo = playerTwoRunningLeft
     clearTile(x, y)
     addSprite(x, y, ')')
@@ -339,13 +376,15 @@ onInput("j", () => {
 
   if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == '.') {
     getFirst(playerTwo).x -= 1
+  } else if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == playerOne) {
+    tag(1)
   }
 })
 
 onInput("l", () => {
   let x = getFirst(playerTwo).x
   let y = getFirst(playerTwo).y
-  if (tag == 1) {
+  if (it == 1) {
     playerTwo = playerTwoRunningRight
     clearTile(x, y)
     addSprite(x, y, '(')
@@ -357,6 +396,8 @@ onInput("l", () => {
 
   if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == '.') {
     getFirst(playerTwo).x += 1
+  } else if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == playerOne) {
+    tag(1)
   }
 })
 
@@ -364,7 +405,7 @@ afterInput(async () => {
   await delay(400);
   let x = getFirst(playerOne).x
   let y = getFirst(playerOne).y
-  if (tag != 1) {
+  if (it != 1) {
     playerOne = playerOneIdle
     clearTile(x, y)
     addSprite(x, y, ':')
@@ -376,7 +417,7 @@ afterInput(async () => {
   
   x = getFirst(playerTwo).x
   y = getFirst(playerTwo).y
-  if (tag == 1) {
+  if (it == 1) {
     playerTwo = playerTwoIdle
     clearTile(x, y)
     addSprite(x, y, '*')
@@ -403,6 +444,4 @@ afterInput(async () => {
   await applyGravityWithDelay(playerOne);
 
   await applyGravityWithDelay(playerTwo);
-
-  await applyGravityWithDelay(tagged);
 })
