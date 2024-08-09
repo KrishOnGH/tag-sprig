@@ -242,6 +242,9 @@ function delay(ms) {
 }
 
 function getSprite(x, y) {
+  if (x > 13 || x < 0 || y > 10 || y < 0) {
+    return '_'
+  }
   if (getTile(x, y).length == 0) {
     return '.'
   }
@@ -272,7 +275,11 @@ let playerTwo = playerTwoIdle
 tag(1)
 
 onInput("w", () => {
-  getFirst(playerOne).y -= 1
+  console.log(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+1))
+  console.log(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2))
+  if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == '.' && !(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+1) == '.' && getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2) == '.')) {
+    getFirst(playerOne).y -= 1
+  }
 })
 
 onInput("a", () => {
@@ -287,8 +294,10 @@ onInput("a", () => {
     clearTile(x, y)
     addSprite(x, y, 'l')
   }
-  
-  getFirst(playerOne).x -= 1
+
+  if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == '.') {
+    getFirst(playerOne).x -= 1
+  }
 })
 
 onInput("d", () => {
@@ -303,12 +312,16 @@ onInput("d", () => {
     clearTile(x, y)
     addSprite(x, y, 'r')
   }
-  
-  getFirst(playerOne).x += 1
+
+  if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == '.') {
+    getFirst(playerOne).x += 1
+  }
 })
 
 onInput("i", () => {
-  getFirst(playerTwo).y -= 1
+  if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y-1) == '.' && !(getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == '.' && getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+2) == '.')) {
+    getFirst(playerTwo).y -= 1
+  }
 })
 
 onInput("j", () => {
@@ -323,8 +336,10 @@ onInput("j", () => {
     clearTile(x, y)
     addSprite(x, y, 'L')
   }
-  
-  getFirst(playerTwo).x -= 1
+
+  if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == '.') {
+    getFirst(playerTwo).x -= 1
+  }
 })
 
 onInput("l", () => {
@@ -339,8 +354,10 @@ onInput("l", () => {
     clearTile(x, y)
     addSprite(x, y, 'R')
   }
-  
-  getFirst(playerTwo).x += 1
+
+  if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == '.') {
+    getFirst(playerTwo).x += 1
+  }
 })
 
 afterInput(async () => {
