@@ -291,6 +291,7 @@ CCCCCCCCCCCCCCCC
 ......DDD.......` ],
 )
 
+let state = 0
 const levels = [
   map`
 ...............
@@ -318,14 +319,14 @@ const levels = [
 ..............
 ..............`
 ]
-setMap(levels[0])
+setMap(levels[state])
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function getSprite(x, y) {
-  if (x > 13 || x < 0 || y > 10 || y < 0) {
+  if (x > 14 || x < 0 || y > 11 || y < 0) {
     return '_'
   }
   if (getTile(x, y).length == 0) {
@@ -363,8 +364,6 @@ function tag(player) {
   it = player
 }
 
-let startTime;
-
 function startTimer() {
   startTime = performance.now();
 }
@@ -377,194 +376,224 @@ function getElapsedTime() {
 
 function endscreen(winner) {
   clearText(),
-  setMap(levels[1])
-  addText("Player " + winner + " Wins", {x: 4, y: 7, color: color`3`})
+  state = 1
+  setMap(levels[state])
+  addText("Player " + winner + " Wins", {x: 4, y: 6, color: color`3`})
+  addText("Press K to restart", {x: 1, y: 8, color: color`3`})
 }
 
-let it = 0
-let playerOne = playerOneIdle
-let playerTwo = playerTwoIdle
-let timer = 120
-
-tag(1)
-startTimer();
-
-setInterval(() => {
-  const elapsedSeconds = Math.floor(getElapsedTime() / 1000);
+function startgame() {
+  state = 0
+  setMap(levels[state])
+  clearText()
+  it = 0
+  playerOne = playerOneIdle
+  playerTwo = playerTwoIdle
+  timer = 120
   
-  if (elapsedSeconds > timer) {
-    let winner = 1
-    if (it == 1) {
-      winner = 2
+  tag(1)
+  startTimer();
+  
+  setInterval(() => {
+    const elapsedSeconds = Math.floor(getElapsedTime() / 1000);
+    
+    if (elapsedSeconds > timer) {
+      let winner = 1
+      if (it == 1) {
+        winner = 2
+      }
+      
+      endscreen(winner)
+      return 0
     }
     
-    endscreen(winner)
-    return 0
-  }
+    const timeRemaining = timer-elapsedSeconds
+    const displayMinutesRemaining = Math.floor(timeRemaining/60)
+    let displaySecondsRemaining = Math.floor(timeRemaining%60)
+    if (displaySecondsRemaining < 10) {
+      displaySecondsRemaining = "0" + String(displaySecondsRemaining)
+    }
+    let textColor
   
-  const timeRemaining = timer-elapsedSeconds
-  const displayMinutesRemaining = Math.floor(timeRemaining/60)
-  let displaySecondsRemaining = Math.floor(timeRemaining%60)
-  if (displaySecondsRemaining < 10) {
-    displaySecondsRemaining = "0" + String(displaySecondsRemaining)
-  }
-  let textColor
+    if (timeRemaining > 2*timer/3) {
+      textColor = 4
+    } else if (timeRemaining > timer/3) {
+      textColor = 9
+    } else if (timeRemaining > 0) {
+      textColor = 3
+    }
+    
+    clearText()
+    addText(displayMinutesRemaining + ':' + displaySecondsRemaining, { 
+      x: 15,
+      y: 1,
+      color: color `${textColor}`
+    })
+  }, 1000);
+}
 
-  if (timeRemaining > 2*timer/3) {
-    textColor = 4
-  } else if (timeRemaining > timer/3) {
-    textColor = 9
-  } else if (timeRemaining > 0) {
-    textColor = 3
-  }
-  
-  clearText()
-  addText(displayMinutesRemaining + ':' + displaySecondsRemaining, { 
-    x: 15,
-    y: 1,
-    color: color `${textColor}`
-  })
-}, 1000);
+let it
+let playerOne
+let playerTwo
+let timer
+let startTime
+startgame()
 
 onInput("w", () => {
-  console.log(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+1))
-  console.log(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2))
-  if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == '.' && !(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+1) == '.' && getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2) == '.')) {
-    getFirst(playerOne).y -= 1
-  } else if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == playerTwo) {
-    tag(2)
+  if (state == 0) {
+    if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == '.' && !(getSprite(getFirst(playerOne).x, getFirst(playerOne).y+1) == '.' && getSprite(getFirst(playerOne).x, getFirst(playerOne).y+2) == '.')) {
+      getFirst(playerOne).y -= 1
+    } else if (getSprite(getFirst(playerOne).x, getFirst(playerOne).y-1) == playerTwo) {
+      tag(2)
+    }
   }
 })
 
 onInput("a", () => {
-  let x = getFirst(playerOne).x
-  let y = getFirst(playerOne).y
-  if (it != 1) {
-    playerOne = playerOneRunningLeft
-    clearTile(x, y)
-    addSprite(x, y, '<')
-  } else {
-    playerOne = taggedPlayerOneRunningLeft
-    clearTile(x, y)
-    addSprite(x, y, 'l')
-  }
-
-  if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == '.') {
-    getFirst(playerOne).x -= 1
-  } else if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == playerTwo) {
-    tag(2)
+  if (state == 0) {
+    let x = getFirst(playerOne).x
+    let y = getFirst(playerOne).y
+    if (it != 1) {
+      playerOne = playerOneRunningLeft
+      clearTile(x, y)
+      addSprite(x, y, '<')
+    } else {
+      playerOne = taggedPlayerOneRunningLeft
+      clearTile(x, y)
+      addSprite(x, y, 'l')
+    }
+  
+    if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == '.') {
+      getFirst(playerOne).x -= 1
+    } else if (getSprite(getFirst(playerOne).x-1, getFirst(playerOne).y) == playerTwo) {
+      tag(2)
+    }
   }
 })
 
 onInput("d", () => {
-  let x = getFirst(playerOne).x
-  let y = getFirst(playerOne).y
-  if (it != 1) {
-    playerOne = playerOneRunningRight
-    clearTile(x, y)
-    addSprite(x, y, '>')
-  } else {
-    playerOne = taggedPlayerOneRunningRight
-    clearTile(x, y)
-    addSprite(x, y, 'r')
-  }
-
-  if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == '.') {
-    getFirst(playerOne).x += 1
-  } else if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == playerTwo) {
-    tag(2)
+  if (state == 0) {
+    let x = getFirst(playerOne).x
+    let y = getFirst(playerOne).y
+    if (it != 1) {
+      playerOne = playerOneRunningRight
+      clearTile(x, y)
+      addSprite(x, y, '>')
+    } else {
+      playerOne = taggedPlayerOneRunningRight
+      clearTile(x, y)
+      addSprite(x, y, 'r')
+    }
+  
+    if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == '.') {
+      getFirst(playerOne).x += 1
+    } else if (getSprite(getFirst(playerOne).x+1, getFirst(playerOne).y) == playerTwo) {
+      tag(2)
+    }
   }
 })
 
 onInput("i", () => {
-  if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y-1) == '.' && !(getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == '.' && getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+2) == '.')) {
-    getFirst(playerTwo).y -= 1
-  } else if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == playerOne) {
-    tag(1)
+  if (state == 0) {
+    if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y-1) == '.' && !(getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == '.' && getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+2) == '.')) {
+      getFirst(playerTwo).y -= 1
+    } else if (getSprite(getFirst(playerTwo).x, getFirst(playerTwo).y+1) == playerOne) {
+      tag(1)
+    }
   }
 })
 
 onInput("j", () => {
-  let x = getFirst(playerTwo).x
-  let y = getFirst(playerTwo).y
-  if (it == 1) {
-    playerTwo = playerTwoRunningLeft
-    clearTile(x, y)
-    addSprite(x, y, ')')
-  } else {
-    playerTwo =taggedPlayerTwoRunningLeft
-    clearTile(x, y)
-    addSprite(x, y, 'L')
-  }
-
-  if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == '.') {
-    getFirst(playerTwo).x -= 1
-  } else if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == playerOne) {
-    tag(1)
+  if (state == 0) {
+    let x = getFirst(playerTwo).x
+    let y = getFirst(playerTwo).y
+    if (it == 1) {
+      playerTwo = playerTwoRunningLeft
+      clearTile(x, y)
+      addSprite(x, y, ')')
+    } else {
+      playerTwo =taggedPlayerTwoRunningLeft
+      clearTile(x, y)
+      addSprite(x, y, 'L')
+    }
+  
+    if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == '.') {
+      getFirst(playerTwo).x -= 1
+    } else if (getSprite(getFirst(playerTwo).x-1, getFirst(playerTwo).y) == playerOne) {
+      tag(1)
+    }
   }
 })
 
 onInput("l", () => {
-  let x = getFirst(playerTwo).x
-  let y = getFirst(playerTwo).y
-  if (it == 1) {
-    playerTwo = playerTwoRunningRight
-    clearTile(x, y)
-    addSprite(x, y, '(')
-  } else {
-    playerTwo = taggedPlayerTwoRunningRight
-    clearTile(x, y)
-    addSprite(x, y, 'R')
-  }
-
-  if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == '.') {
-    getFirst(playerTwo).x += 1
-  } else if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == playerOne) {
-    tag(1)
+  if (state == 0) {
+    let x = getFirst(playerTwo).x
+    let y = getFirst(playerTwo).y
+    if (it == 1) {
+      playerTwo = playerTwoRunningRight
+      clearTile(x, y)
+      addSprite(x, y, '(')
+    } else {
+      playerTwo = taggedPlayerTwoRunningRight
+      clearTile(x, y)
+      addSprite(x, y, 'R')
+    }
+  
+    if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == '.') {
+      getFirst(playerTwo).x += 1
+    } else if (getSprite(getFirst(playerTwo).x+1, getFirst(playerTwo).y) == playerOne) {
+      tag(1)
+    }
   }
 })
 
-afterInput(async () => {
-  await delay(400);
-  let x = getFirst(playerOne).x
-  let y = getFirst(playerOne).y
-  if (it != 1) {
-    playerOne = playerOneIdle
-    clearTile(x, y)
-    addSprite(x, y, ':')
-  } else {
-    playerOne = taggedPlayerOneIdle
-    clearTile(x, y)
-    addSprite(x, y, 'j')
-  }
-  
-  x = getFirst(playerTwo).x
-  y = getFirst(playerTwo).y
-  if (it == 1) {
-    playerTwo = playerTwoIdle
-    clearTile(x, y)
-    addSprite(x, y, '*')
-  } else {
-    playerTwo = taggedPlayerTwoIdle
-    clearTile(x, y)
-    addSprite(x, y, 'J')
-  }
-  
-  async function applyGravityWithDelay(sprite) {
-    let x = getFirst(sprite).x
-    let y = getFirst(sprite).y
+onInput("k", () => {
+  startgame()
+})
 
-    for (let i = y; i <= 10; i++) {
-      if (i < 10 && getSprite(x, i+1) == '.') {
-        getFirst(sprite).y += 1
-        await delay(100)
-      } else {
-        break
+afterInput(async () => {
+  if (state == 0) {
+    await delay(400);
+    let x = getFirst(playerOne).x
+    let y = getFirst(playerOne).y
+    if (it != 1) {
+      playerOne = playerOneIdle
+      clearTile(x, y)
+      addSprite(x, y, ':')
+    } else {
+      playerOne = taggedPlayerOneIdle
+      clearTile(x, y)
+      addSprite(x, y, 'j')
+    }
+    
+    x = getFirst(playerTwo).x
+    y = getFirst(playerTwo).y
+    if (it == 1) {
+      playerTwo = playerTwoIdle
+      clearTile(x, y)
+      addSprite(x, y, '*')
+    } else {
+      playerTwo = taggedPlayerTwoIdle
+      clearTile(x, y)
+      addSprite(x, y, 'J')
+    }
+    
+    async function applyGravityWithDelay(sprite) {
+      let x = getFirst(sprite).x
+      let y = getFirst(sprite).y
+  
+      for (let i = y; i <= 11; i++) {
+        if (i < 11 && getSprite(x, i+1) == '.') {
+          getFirst(sprite).y += 1
+          await delay(100)
+        } else {
+          break
+        }
       }
     }
-  }
+    
+    await applyGravityWithDelay(playerOne);
   
-  await applyGravityWithDelay(playerOne);
-
-  await applyGravityWithDelay(playerTwo);
+    await applyGravityWithDelay(playerTwo);
+  }
 })
