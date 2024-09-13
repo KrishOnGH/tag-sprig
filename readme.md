@@ -2,6 +2,8 @@
 
 Welcome to Tag, an exciting two-player game inspired by the Poki tag game, now brought to life on the Hackclub Sprig console!
 
+# [Link to Play](https://sprig.hackclub.com/share/KsP4ebVsvPISFg8r3t9T)
+
 ## Game Overview
 
 Tag is a thrilling chase game where two players compete against each other and the clock. One player starts as "it" and must tag the other player before time runs out. The game is set in a platformer-style environment, adding an extra layer of strategy and fun to the classic tag concept.
