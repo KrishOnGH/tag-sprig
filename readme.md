@@ -1,3 +1,5 @@
+![Cover](https://github.com/KrishOnGH/tag-sprig/blob/22a35b1fa89333b7c3f14d30ec1d8b2f476a0ed9/image.png)
+
 # Tag Game for Sprig Console
 
 Welcome to Tag, an exciting two-player game inspired by the Poki tag game, now brought to life on the Hackclub Sprig console!
